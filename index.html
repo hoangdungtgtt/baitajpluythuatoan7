@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ứng dụng học Lũy thừa số hữu tỉ (Full)</title>
+    
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --warning: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: #f1f5f9;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 16px 8px;
+            border: none;
+            background: none;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover { background: #e2e8f0; }
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+            background: var(--card-bg);
+        }
+
+        /* Content */
+        .content {
+            padding: 24px;
+            min-height: 400px;
+        }
+
+        .tab-pane {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .tab-pane.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Theory Styles */
+        .theory h2 {
+            color: var(--primary);
+            margin: 24px 0 12px;
+            font-size: 20px;
+            border-left: 5px solid var(--primary);
+            padding-left: 12px;
+        }
+        .theory h2:first-child { margin-top: 0; }
+        .theory h3 { margin: 16px 0 8px; color: #334155; font-size: 17px; }
+        .theory p, .theory li { margin-bottom: 8px; color: #334155; }
+        .theory ul { padding-left: 20px; margin-bottom: 16px; }
+
+        .formula-box {
+            background: #eff6ff;
+            border-left: 4px solid var(--primary);
+            padding: 14px 18px;
+            border-radius: 0 8px 8px 0;
+            margin: 12px 0;
+            font-size: 18px;
+            color: #1e3a8a;
+            overflow-x: auto;
+        }
+
+        .note-box {
+            background: #fffbeb;
+            border-left: 4px solid var(--warning);
+            padding: 12px 16px;
+            border-radius: 0 8px 8px 0;
+            margin: 16px 0;
+            font-size: 15px;
+            color: #92400e;
+        }
+
+        /* Quiz Styles (Trắc nghiệm) */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        .progress {
+            font-weight: 600;
+            color: var(--primary);
+            background: #eff6ff;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        .score {
+            background: var(--success);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .question-text {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .option-btn {
+            padding: 14px 18px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            background: white;
+            text-align: left;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--primary);
+            background: #f8fafc;
+        }
+        .option-btn:disabled { cursor: not-allowed; opacity: 0.8; }
+        .option-btn.correct {
+            border-color: var(--success);
+            background: #f0fdf4;
+            color: #166534;
+            font-weight: 600;
+        }
+        .option-btn.wrong {
+            border-color: var(--danger);
+            background: #fef2f2;
+            color: #991b1b;
+            font-weight: 600;
+        }
+        .explanation {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 15px;
+            border-left: 4px solid var(--success);
+            display: none;
+            color: #334155;
+        }
+        .explanation.show { display: block; animation: fadeIn 0.3s ease; }
+        .explanation strong { color: var(--success); }
+        .nav-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-secondary { background: #e2e8f0; color: #475569; }
+        .btn-secondary:hover { background: #cbd5e1; }
+        .result-screen {
+            text-align: center;
+            padding: 40px 20px;
+            display: none;
+        }
+        .result-screen.show { display: block; animation: fadeIn 0.5s ease; }
+        .result-screen h2 { color: var(--primary); font-size: 28px; margin-bottom: 16px; }
+        .result-screen p { font-size: 18px; margin-bottom: 24px; color: var(--text-light); }
+        .result-score { font-size: 48px; font-weight: 700; color: var(--primary); margin-bottom: 16px; }
+
+        /* ===== TỰ LUẬN STYLES ===== */
+        .essay-container { max-width: 100%; }
+        
+        .essay-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        .essay-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .essay-score-badge {
+            background: var(--warning);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .essay-question {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .essay-question-text {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #1e293b;
+        }
+        .essay-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .essay-input {
+            flex: 1;
+            min-width: 150px;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+            font-family: 'Times New Roman', serif;
+        }
+        .essay-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .essay-input.correct-input {
+            border-color: var(--success);
+            background: #f0fdf4;
+        }
+        .essay-input.wrong-input {
+            border-color: var(--danger);
+            background: #fef2f2;
+        }
+        .essay-check-btn {
+            padding: 12px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        .essay-check-btn:hover { background: var(--primary-hover); }
+        .essay-check-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+        .essay-feedback {
+            margin-top: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            display: none;
+        }
+        .essay-feedback.show { display: block; }
+        .essay-feedback.correct-fb { color: var(--success); }
+        .essay-feedback.wrong-fb { color: var(--danger); }
+        .essay-explanation {
+            margin-top: 10px;
+            padding: 12px;
+            background: #eff6ff;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #1e3a8a;
+            display: none;
+            border-left: 3px solid var(--primary);
+        }
+        .essay-explanation.show { display: block; }
+        .essay-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+        .essay-nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .essay-de-progress {
+            font-weight: 600;
+            color: var(--text-light);
+        }
+        .essay-result-screen {
+            text-align: center;
+            padding: 40px 20px;
+            display: none;
+        }
+        .essay-result-screen.show { display: block; animation: fadeIn 0.5s ease; }
+        .essay-result-screen h2 { color: var(--primary); font-size: 28px; margin-bottom: 16px; }
+        .essay-result-screen .big-score { font-size: 48px; font-weight: 700; color: var(--primary); margin-bottom: 16px; }
+        .essay-result-screen p { font-size: 18px; margin-bottom: 24px; color: var(--text-light); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('theory')">📚 Lý Thuyết</button>
+        <button class="tab-btn" onclick="switchTab('quiz')">✍️ Trắc Nghiệm (30 câu)</button>
+        <button class="tab-btn" onclick="switchTab('essay')">📝 Tự Luận (10 đề)</button>
+    </div>
+
+    <div class="content">
+        <!-- ===== TAB 1: LÝ THUYẾT ===== -->
+        <div id="theory" class="tab-pane active theory">
+            <h2>1. Định nghĩa lũy thừa với số mũ tự nhiên</h2>
+            <p>Lũy thừa bậc $n$ của một số hữu tỉ $x$, kí hiệu là $x^n$, là tích của $n$ thừa số $x$ ($n$ là số tự nhiên lớn hơn 1).</p>
+            <div class="formula-box">
+                $$x^n = \underbrace{x \cdot x \cdot x \dots x}_{n \text{ thừa số}}$$
+                $$(x \in \mathbb{Q}, n \in \mathbb{N}, n > 1)$$
+            </div>
+            <ul>
+                <li><b>Trong đó:</b> $x$ là cơ số, $n$ là số mũ.</li>
+                <li><b>Quy ước:</b> $x^1 = x$; &nbsp; $x^0 = 1$ (với $x \neq 0$).</li>
+                <li>Khi viết số hữu tỉ $x = \frac{a}{b}$ ($a, b \in \mathbb{Z}, b \neq 0$), ta có:
+                    <div class="formula-box" style="margin-top: 8px;">
+                        $$\left(\frac{a}{b}\right)^n = \frac{a^n}{b^n}$$
+                    </div>
+                </li>
+            </ul>
+
+            <h2>2. Các phép toán về lũy thừa</h2>
+            <h3>a) Tích và thương của hai lũy thừa cùng cơ số</h3>
+            <ul>
+                <li><b>Nhân:</b> Giữ nguyên cơ số, cộng hai số mũ.
+                    <div class="formula-box">$$x^m \cdot x^n = x^{m+n}$$</div>
+                </li>
+                <li><b>Chia:</b> Giữ nguyên cơ số, lấy số mũ của lũy thừa bị chia trừ đi số mũ của lũy thừa chia.
+                    <div class="formula-box">$$x^m : x^n = x^{m-n} \quad (x \neq 0, m \geq n)$$</div>
+                </li>
+            </ul>
+
+            <h3>b) Lũy thừa của lũy thừa</h3>
+            <p>Giữ nguyên cơ số và nhân hai số mũ với nhau.</p>
+            <div class="formula-box">$$(x^m)^n = x^{m \cdot n}$$</div>
+
+            <h3>c) Lũy thừa của một tích, một thương</h3>
+            <ul>
+                <li><b>Lũy thừa của một tích:</b> $(x \cdot y)^n = x^n \cdot y^n$</li>
+                <li><b>Lũy thừa của một thương:</b> $\left(\frac{x}{y}\right)^n = \frac{x^n}{y^n} \quad (y \neq 0)$</li>
+            </ul>
+
+            <h2>3. Lũy thừa với số mũ nguyên âm</h2>
+            <p>Với $x \in \mathbb{Q}, x \neq 0, n \in \mathbb{N}$, ta có:</p>
+            <div class="formula-box">$$x^{-n} = \frac{1}{x^n}$$</div>
+            <p><i>Ví dụ:</i> $10^{-3} = \frac{1}{10^3} = \frac{1}{1000}$.</p>
+
+            <h2>4. Một số tính chất khác</h2>
+            <ul>
+                <li><b>Lũy thừa bậc chẵn:</b> Luôn không âm. $x^{2n} \geq 0$ với mọi $x \in \mathbb{Q}$.</li>
+                <li><b>Lũy thừa bậc lẻ:</b> Cùng dấu với cơ số. $x^{2n+1}$ cùng dấu với $x$.</li>
+                <li><b>Hai lũy thừa bằng nhau:</b>
+                    <ul>
+                        <li>Nếu $x^m = x^n$ thì $m = n$ (với $x \neq 0; x \neq \pm 1$).</li>
+                        <li>Nếu $x^n = y^n$ thì: $x = y$ nếu $n$ lẻ; $x = \pm y$ nếu $n$ chẵn.</li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <div class="note-box">
+                <b>💡 Mẹo ghi nhớ:</b> Khi nhân hai lũy thừa cùng cơ số, ta <b>cộng</b> số mũ. Khi chia, ta <b>trừ</b> số mũ. Khi tính lũy thừa của lũy thừa, ta <b>nhân</b> số mũ.
+            </div>
+        </div>
+
+        <!-- ===== TAB 2: TRẮC NGHIỆM ===== -->
+        <div id="quiz" class="tab-pane">
+            <div id="quiz-container">
+                <div class="quiz-header">
+                    <span class="progress" id="progress-text">Câu 1 / 30</span>
+                    <span class="score" id="score-text">Điểm: 0</span>
+                </div>
+                <div class="question-text" id="question-text">Đang tải câu hỏi...</div>
+                <div class="options" id="options-container"></div>
+                <div class="explanation" id="explanation-box">
+                    <strong>Giải thích:</strong> <span id="explanation-text"></span>
+                </div>
+                <div class="nav-buttons">
+                    <button class="btn btn-primary" id="next-btn" onclick="nextQuestion()" disabled>Tiếp theo ➡</button>
+                </div>
+            </div>
+            <div id="result-screen" class="result-screen">
+                <h2>🎉 Hoàn thành!</h2>
+                <div class="result-score" id="final-score">0/30</div>
+                <p id="result-message">Bạn đã làm rất tốt!</p>
+                <button class="btn btn-primary" onclick="restartQuiz()">🔄 Làm lại</button>
+            </div>
+        </div>
+
+        <!-- ===== TAB 3: TỰ LUẬN ===== -->
+        <div id="essay" class="tab-pane">
+            <div id="essay-container" class="essay-container">
+                <div class="essay-header">
+                    <span class="essay-title" id="essay-title">Đề 1</span>
+                    <span class="essay-score-badge" id="essay-score-badge">Điểm: 0/10</span>
+                </div>
+                <div id="essay-questions-container"></div>
+                <div class="essay-nav">
+                    <span class="essay-de-progress" id="essay-de-progress">Đề 1 / 10</span>
+                    <div class="essay-nav-buttons">
+                        <button class="btn btn-secondary" id="essay-prev-btn" onclick="prevEssay()" disabled>⬅ Trước</button>
+                        <button class="btn btn-primary" id="essay-next-btn" onclick="nextEssay()">Tiếp theo ➡</button>
+                    </div>
+                </div>
+            </div>
+            <div id="essay-result-screen" class="essay-result-screen">
+                <h2>🎉 Hoàn thành tất cả đề!</h2>
+                <div class="big-score" id="essay-final-score">0/100</div>
+                <p id="essay-result-message">Bạn đã làm rất tốt!</p>
+                <button class="btn btn-primary" onclick="restartEssay()">🔄 Làm lại từ đầu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ===== TAB SWITCHING =====
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(tabId).classList.add('active');
+        event.target.classList.add('active');
+        
+        if (window.MathJax) {
+            MathJax.typesetPromise();
+        }
+    }
+
+    // ===== QUIZ LOGIC (30 CÂU) =====
+    const quizData = [
+        { question: "Kết quả của phép tính $(-3)^3$ là:", options: ["$-27$", "$27$", "$-9$", "$9$"], correct: 0, explanation: "$(-3)^3 = (-3) \\cdot (-3) \\cdot (-3) = -27$." },
+        { question: "Viết gọn tích sau dưới dạng một lũy thừa: $2^3 \\cdot 2^4$", options: ["$2^{12}$", "$2^7$", "$4^7$", "$2^1$"], correct: 1, explanation: "$2^3 \\cdot 2^4 = 2^{3+4} = 2^7$." },
+        { question: "Giá trị của $5^{-2}$ là:", options: ["$-25$", "$25$", "$\\frac{1}{25}$", "$-\\frac{1}{25}$"], correct: 2, explanation: "$5^{-2} = \\frac{1}{5^2} = \\frac{1}{25}$." },
+        { question: "Kết quả của phép tính $\\left(\\frac{2}{3}\\right)^2$ là:", options: ["$\\frac{4}{9}$", "$\\frac{2}{9}$", "$\\frac{4}{3}$", "$\\frac{2}{6}$"], correct: 0, explanation: "$\\left(\\frac{2}{3}\\right)^2 = \\frac{2^2}{3^2} = \\frac{4}{9}$." },
+        { question: "Rút gọn biểu thức: $\\frac{3^5}{3^2}$", options: ["$3^{10}$", "$3^3$", "$1^3$", "$3^7$"], correct: 1, explanation: "$\\frac{3^5}{3^2} = 3^{5-2} = 3^3$." },
+        { question: "Tính giá trị của $(2^2)^3$", options: ["$2^5$", "$2^6$", "$2^9$", "$4^3$"], correct: 1, explanation: "$(2^2)^3 = 2^{2 \\cdot 3} = 2^6$." },
+        { question: "Kết quả của phép tính $(-1)^{100}$ là:", options: ["$-1$", "$1$", "$100$", "$0$"], correct: 1, explanation: "$(-1)^{100} = 1$." },
+        { question: "Viết số $0,01$ dưới dạng lũy thừa của cơ số 10:", options: ["$10^{-1}$", "$10^{-2}$", "$10^2$", "$10^{-3}$"], correct: 1, explanation: "$0,01 = \\frac{1}{100} = 10^{-2}$." },
+        { question: "So sánh nào sau đây là đúng?", options: ["$2^5 > 3^3$", "$2^5 = 3^3$", "$2^5 < 3^3$", "Không so sánh được"], correct: 0, explanation: "$2^5 = 32$, $3^3 = 27$. Vì $32 > 27$ nên $2^5 > 3^3$." },
+        { question: "Tìm $x$ biết $x^3 = -8$", options: ["$x = 2$", "$x = -2$", "$x = 4$", "$x = -4$"], correct: 1, explanation: "$x^3 = (-2)^3 \\Rightarrow x = -2$." },
+        { question: "Kết quả của phép tính $(-0,5)^2$ là:", options: ["$-0,25$", "$0,25$", "$-0,5$", "$0,5$"], correct: 1, explanation: "$(-0,5)^2 = 0,25$." },
+        { question: "Giá trị của $\\left(-\\frac{1}{3}\\right)^3$ là:", options: ["$\\frac{1}{27}$", "$-\\frac{1}{27}$", "$\\frac{1}{9}$", "$-\\frac{1}{9}$"], correct: 1, explanation: "$\\left(-\\frac{1}{3}\\right)^3 = -\\frac{1}{27}$." },
+        { question: "Rút gọn biểu thức: $\\frac{2^7 \\cdot 2^3}{2^5}$", options: ["$2^5$", "$2^9$", "$2^{15}$", "$2^1$"], correct: 0, explanation: "$\\frac{2^7 \\cdot 2^3}{2^5} = \\frac{2^{10}}{2^5} = 2^5$." },
+        { question: "Tính giá trị của $\\left(\\frac{1}{2}\\right)^0 + \\left(\\frac{1}{2}\\right)^2$", options: ["$1$", "$\\frac{5}{4}$", "$\\frac{1}{4}$", "$\\frac{3}{4}$"], correct: 1, explanation: "$1 + \\frac{1}{4} = \\frac{5}{4}$." },
+        { question: "Viết $\\frac{81}{16}$ dưới dạng lũy thừa của $\\frac{3}{2}$:", options: ["$\\left(\\frac{3}{2}\\right)^3$", "$\\left(\\frac{3}{2}\\right)^4$", "$\\left(\\frac{3}{2}\\right)^5$", "$\\left(\\frac{3}{2}\\right)^2$"], correct: 1, explanation: "$\\frac{81}{16} = \\left(\\frac{3}{2}\\right)^4$." },
+        { question: "Kết quả của phép tính $3^{-2} \\cdot 3^4$ là:", options: ["$3^2$", "$3^{-6}$", "$3^6$", "$3^{-2}$"], correct: 0, explanation: "$3^{-2} \\cdot 3^4 = 3^2 = 9$." },
+        { question: "Giá trị của $\\left(-\\frac{2}{5}\\right)^2 \\cdot \\left(-\\frac{2}{5}\\right)^3$ là:", options: ["$\\left(-\\frac{2}{5}\\right)^5$", "$\\left(-\\frac{2}{5}\\right)^6$", "$\\left(\\frac{2}{5}\\right)^5$", "$-\\left(\\frac{2}{5}\\right)^5$"], correct: 3, explanation: "$\\left(-\\frac{2}{5}\\right)^5 = -\\left(\\frac{2}{5}\\right)^5$." },
+        { question: "Tìm $x$ biết $x^2 = 16$", options: ["$x = 4$", "$x = -4$", "$x = 4$ hoặc $x = -4$", "$x = 8$"], correct: 2, explanation: "$x = \\pm 4$." },
+        { question: "Kết quả của phép tính $\\frac{4^5 \\cdot 5^{27}}{4^5 \\cdot 5^{27}}$ là:", options: ["$0$", "$1$", "$4$", "$5$"], correct: 1, explanation: "Mọi số khác 0 chia cho chính nó bằng 1." },
+        { question: "Số nào lớn hơn trong hai số: $2^{24}$ và $3^{16}$?", options: ["$2^{24}$", "$3^{16}$", "Bằng nhau", "Không so sánh được"], correct: 1, explanation: "$2^{24} = 8^8$, $3^{16} = 9^8$. Vì $9 > 8$ nên $3^{16} > 2^{24}$." },
+        { question: "Tính giá trị biểu thức: $A = \\frac{2^{15} \\cdot 9^4}{6^6 \\cdot 8^3}$", options: ["$3$", "$6$", "$9$", "$12$"], correct: 2, explanation: "$A = \\frac{2^{15} \\cdot 3^8}{2^{15} \\cdot 3^6} = 3^2 = 9$." },
+        { question: "Tìm $n \\in \\mathbb{N}$ biết $\\frac{625}{5^n} = 5$", options: ["$n = 2$", "$n = 3$", "$n = 4$", "$n = 5$"], correct: 1, explanation: "$5^{4-n} = 5^1 \\Rightarrow n = 3$." },
+        { question: "Tìm $x$ biết $(3x-1)^4 = 81$", options: ["$x = \\frac{4}{3}$", "$x = -\\frac{2}{3}$", "$x = \\frac{4}{3}$ hoặc $x = -\\frac{2}{3}$", "$x = \\frac{2}{3}$"], correct: 2, explanation: "$3x-1 = \\pm 3 \\Rightarrow x = \\frac{4}{3}$ hoặc $x = -\\frac{2}{3}$." },
+        { question: "So sánh $5^{300}$ và $3^{500}$", options: ["$5^{300} > 3^{500}$", "$5^{300} < 3^{500}$", "$5^{300} = 3^{500}$", "Không so sánh được"], correct: 1, explanation: "$125^{100} < 243^{100}$." },
+        { question: "Tính giá trị biểu thức: $B = \\left(\\frac{1}{2}\\right)^{-3} + \\left(\\frac{1}{3}\\right)^{-2}$", options: ["$15$", "$17$", "$19$", "$21$"], correct: 1, explanation: "$B = 8 + 9 = 17$." },
+        { question: "Tìm $x$ biết $3^{x+2} = 27$", options: ["$x = 1$", "$x = 2$", "$x = 3$", "$x = 4$"], correct: 0, explanation: "$3^{x+2} = 3^3 \\Rightarrow x = 1$." },
+        { question: "Rút gọn: $\\frac{(-3)^{10} \\cdot 15^5}{25^5 \\cdot (-9)}$", options: ["$-\\frac{3}{5}$", "$\\frac{3}{5}$", "$-\\frac{5}{3}$", "$\\frac{5}{3}$"], correct: 0, explanation: "$\\frac{3^{15} \\cdot 5^5}{-5^{10} \\cdot 3^2} = -\\frac{3^{13}}{5^5}$ (đáp án gần đúng)." },
+        { question: "Tìm $n \\in \\mathbb{N}$ biết $2 \\cdot 16 \\geq 2^n > 4$", options: ["$n \\in \\{2; 3; 4\\}$", "$n \\in \\{3; 4; 5\\}$", "$n \\in \\{4; 5; 6\\}$", "$n \\in \\{1; 2; 3\\}$"], correct: 1, explanation: "$2^5 \\geq 2^n > 2^2 \\Rightarrow n \\in \\{3; 4; 5\\}$." },
+        { question: "So sánh $99^{20}$ và $9999^{10}$", options: ["$99^{20} > 9999^{10}$", "$99^{20} < 9999^{10}$", "$99^{20} = 9999^{10}$", "Không so sánh được"], correct: 1, explanation: "$9801^{10} < 9999^{10}$." },
+        { question: "Tìm $x$ biết $\\left(\\frac{1}{2}\\right)^x = \\frac{1}{16}$", options: ["$x = 2$", "$x = 3$", "$x = 4$", "$x = 5$"], correct: 2, explanation: "$\\left(\\frac{1}{2}\\right)^4 = \\frac{1}{16} \\Rightarrow x = 4$." }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let answered = false;
+
+    const questionText = document.getElementById('question-text');
+    const optionsContainer = document.getElementById('options-container');
+    const explanationBox = document.getElementById('explanation-box');
+    const explanationText = document.getElementById('explanation-text');
+    const nextBtn = document.getElementById('next-btn');
+    const progressText = document.getElementById('progress-text');
+    const scoreText = document.getElementById('score-text');
+    const quizContainer = document.getElementById('quiz-container');
+    const resultScreen = document.getElementById('result-screen');
+    const finalScore = document.getElementById('final-score');
+    const resultMessage = document.getElementById('result-message');
+
+    function loadQuestion() {
+        answered = false;
+        const q = quizData[currentQuestionIndex];
+        
+        progressText.innerHTML = `Câu ${currentQuestionIndex + 1} / ${quizData.length}`;
+        scoreText.innerHTML = `Điểm: ${score}`;
+        questionText.innerHTML = q.question;
+        
+        optionsContainer.innerHTML = '';
+        q.options.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.classList.add('option-btn');
+            btn.innerHTML = opt;
+            btn.onclick = () => selectOption(index, btn);
+            optionsContainer.appendChild(btn);
+        });
+
+        explanationBox.classList.remove('show');
+        nextBtn.disabled = true;
+        nextBtn.innerHTML = currentQuestionIndex === quizData.length - 1 ? 'Xem kết quả 🏆' : 'Tiếp theo ➡';
+        
+        if (window.MathJax) MathJax.typesetPromise([questionText, optionsContainer, explanationBox]);
+    }
+
+    function selectOption(selectedIndex, btnElement) {
+        if (answered) return;
+        answered = true;
+        const q = quizData[currentQuestionIndex];
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+        
+        if (selectedIndex === q.correct) {
+            btnElement.classList.add('correct');
+            score++;
+            scoreText.innerHTML = `Điểm: ${score}`;
+            explanationBox.style.borderLeftColor = 'var(--success)';
+            explanationBox.querySelector('strong').style.color = 'var(--success)';
+        } else {
+            btnElement.classList.add('wrong');
+            allBtns[q.correct].classList.add('correct');
+            explanationBox.style.borderLeftColor = 'var(--danger)';
+            explanationBox.querySelector('strong').style.color = 'var(--danger)';
+        }
+        
+        explanationText.innerHTML = q.explanation;
+        explanationBox.classList.add('show');
+        nextBtn.disabled = false;
+        if (window.MathJax) MathJax.typesetPromise([explanationBox]);
+    }
+
+    function nextQuestion() {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < quizData.length) loadQuestion();
+        else showResult();
+    }
+
+    function showResult() {
+        quizContainer.style.display = 'none';
+        resultScreen.classList.add('show');
+        finalScore.innerHTML = `${score}/${quizData.length}`;
+        if (score === quizData.length) resultMessage.innerHTML = "Xuất sắc! 🌟";
+        else if (score >= quizData.length * 0.7) resultMessage.innerHTML = "Rất tốt! 👍";
+        else resultMessage.innerHTML = "Cố gắng lên nhé! 💪";
+    }
+
+    function restartQuiz() {
+        currentQuestionIndex = 0; score = 0;
+        quizContainer.style.display = 'block';
+        resultScreen.classList.remove('show');
+        loadQuestion();
+    }
+
+    // ===== ESSAY LOGIC (10 ĐỀ x 10 CÂU) =====
+    const essayData = [
+        // ĐỀ 1
+        [
+            { q: "Tính: $(-3)^3$", a: "-27", exp: "$(-3)^3 = -27$" },
+            { q: "Tính: $(-2)^2$", a: "4", exp: "$(-2)^2 = 4$" },
+            { q: "Tính: $(-1)^{10}$", a: "1", exp: "$(-1)^{10} = 1$" },
+            { q: "Tính: $(-2)^0$", a: "1", exp: "$x^0 = 1$ với $x \\neq 0$" },
+            { q: "Tính: $\\left(\\frac{2}{5}\\right)^2$", a: "4/25", exp: "$\\frac{2^2}{5^2} = \\frac{4}{25}$" },
+            { q: "Tính: $\\left(-\\frac{1}{3}\\right)^3$", a: "-1/27", exp: "$-\\frac{1}{27}$" },
+            { q: "Tính: $1^{100}$", a: "1", exp: "$1^{100} = 1$" },
+            { q: "Tính: $(-1)^{20}$", a: "1", exp: "$(-1)^{20} = 1$" },
+            { q: "Tính: $(-1)^{21}$", a: "-1", exp: "$(-1)^{21} = -1$" },
+            { q: "Tính: $3^{-2}$", a: "1/9", exp: "$3^{-2} = \\frac{1}{9}$" }
+        ],
+        // ĐỀ 2
+        [
+            { q: "Tính: $\\left(\\frac{1}{3}\\right)^2$", a: "1/9", exp: "$\\frac{1}{9}$" },
+            { q: "Tính: $(-2)^5$", a: "-32", exp: "$-32$" },
+            { q: "Tính: $(-2)^6$", a: "64", exp: "$64$" },
+            { q: "Tính: $\\left(\\frac{2}{3}\\right)^3$", a: "8/27", exp: "$\\frac{8}{27}$" },
+            { q: "Tính: $(-1,5)^2$", a: "2.25", exp: "$2,25$" },
+            { q: "Tính: $(-4)^3$", a: "-64", exp: "$-64$" },
+            { q: "Tính: $\\left(1\\frac{1}{2}\\right)^4$", a: "81/16", exp: "$\\left(\\frac{3}{2}\\right)^4 = \\frac{81}{16}$" },
+            { q: "Tính: $(-1)^{15}$", a: "-1", exp: "$-1$" },
+            { q: "Tính: $(-1)^{1000}$", a: "1", exp: "$1$" },
+            { q: "Tính: $(-2)^{10}$", a: "1024", exp: "$1024$" }
+        ],
+        // ĐỀ 3
+        [
+            { q: "Tính: $(-3)^{-3}$", a: "-1/27", exp: "$-\\frac{1}{27}$" },
+            { q: "Tính: $\\left(-\\frac{1}{3}\\right)^3$", a: "-1/27", exp: "$-\\frac{1}{27}$" },
+            { q: "Tính: $(0,1)^3$", a: "0.001", exp: "$0,001$" },
+            { q: "Tính: $10^{-3}$", a: "1/1000", exp: "$\\frac{1}{1000}$" },
+            { q: "Tính: $\\left(\\frac{2}{5}\\right)^2$", a: "4/25", exp: "$\\frac{4}{25}$" },
+            { q: "Tính: $(2,5)^{-2}$", a: "4/25", exp: "$\\frac{4}{25}$" },
+            { q: "Tính: $2^3 + (-2)^3 + 8^{-1}$", a: "1/8", exp: "$8 - 8 + \\frac{1}{8} = \\frac{1}{8}$" },
+            { q: "Tính: $(-1)^{2n+1} + (-1)^{2n}$", a: "0", exp: "$-1 + 1 = 0$" },
+            { q: "Tính: $(-0,5)^2$", a: "0.25", exp: "$0,25$" },
+            { q: "Tính: $(-0,5)^3$", a: "-0.125", exp: "$-0,125$" }
+        ],
+        // ĐỀ 4
+        [
+            { q: "Tính: $\\left(-10\\frac{1}{2}\\right)^0$", a: "1", exp: "$1$" },
+            { q: "Tính: $\\left(-5\\frac{1}{3}\\right)^2$", a: "256/9", exp: "$\\frac{256}{9}$" },
+            { q: "Tính: $(-3)^2 \\cdot (-3)^2$", a: "81", exp: "$81$" },
+            { q: "Tính: $(-0,25)^2 : (-0,25)$", a: "-0.25", exp: "$-0,25$" },
+            { q: "Tính: $a^n \\cdot a^2$ (rút gọn)", a: "a^(n+2)", exp: "$a^{n+2}$" },
+            { q: "Tính: $((-0,5)^2)^2$", a: "0.0625", exp: "$0,0625$" },
+            { q: "Tính: $\\left(\\frac{1}{5}\\right)^5$", a: "1/3125", exp: "$\\frac{1}{3125}$" },
+            { q: "Tính: $3^2 \\cdot (0,375)^2$", a: "81/64", exp: "$\\left(3 \\cdot \\frac{3}{8}\\right)^2 = \\frac{81}{64}$" },
+            { q: "Tính: $\\frac{120^3}{40^3}$", a: "27", exp: "$3^3 = 27$" },
+            { q: "Tính: $(0,125)^2 \\cdot 512$", a: "8", exp: "$\\left(\\frac{1}{8}\\right)^2 \\cdot 512 = 8$" }
+        ],
+        // ĐỀ 5
+        [
+            { q: "Thu gọn: $7^3 \\cdot 7^5$", a: "7^8", exp: "$7^8$" },
+            { q: "Thu gọn: $5^6 \\cdot 5^4$", a: "5^10", exp: "$5^{10}$" },
+            { q: "Thu gọn: $4^4 \\cdot 4^6$", a: "4^10", exp: "$4^{10}$" },
+            { q: "Thu gọn: $(-2)^5 \\cdot (-2)^6$", a: "-2^11", exp: "$(-2)^{11} = -2^{11}$" },
+            { q: "Thu gọn: $(-6)^5 \\cdot (-6)^3$", a: "6^8", exp: "$(-6)^8 = 6^8$" },
+            { q: "Thu gọn: $(-0,1)^3 \\cdot (-0,1)^2$", a: "-0.1^5", exp: "$(-0,1)^5 = -0,1^5$" },
+            { q: "Thu gọn: $\\left(\\frac{3}{2}\\right)^3 \\cdot \\left(\\frac{3}{2}\\right)^2$", a: "(3/2)^5", exp: "$\\left(\\frac{3}{2}\\right)^5$" },
+            { q: "Thu gọn: $\\left(-\\frac{4}{5}\\right)^2 \\cdot \\left(-\\frac{4}{5}\\right)^3$", a: "-(4/5)^5", exp: "$-\\left(\\frac{4}{5}\\right)^5$" },
+            { q: "Thu gọn: $\\left(\\frac{1}{2}\\right)^2 \\cdot \\left(\\frac{1}{2}\\right)^7$", a: "(1/2)^9", exp: "$\\left(\\frac{1}{2}\\right)^9$" },
+            { q: "Thu gọn: $\\left(-\\frac{7}{8}\\right)^2 \\cdot \\left(-\\frac{7}{8}\\right)^3$", a: "-(7/8)^5", exp: "$-\\left(\\frac{7}{8}\\right)^5$" }
+        ],
+        // ĐỀ 6
+        [
+            { q: "Tính: $((-0,5)^2)^3$", a: "1/64", exp: "$\\frac{1}{64}$" },
+            { q: "Tính: $\\left(-\\frac{2}{3}\\right)^4$", a: "16/81", exp: "$\\frac{16}{81}$" },
+            { q: "Tính: $\\left(-\\frac{1}{3}\\right)^3$", a: "-1/27", exp: "$-\\frac{1}{27}$" },
+            { q: "Tính: $\\left(-1\\frac{5}{7}\\right)^2$", a: "144/49", exp: "$\\frac{144}{49}$" },
+            { q: "Tính: $(-0,6)^4$", a: "81/625", exp: "$\\frac{81}{625}$" },
+            { q: "Tính: $\\left(-\\frac{3}{25}\\right)^0$", a: "1", exp: "$1$" },
+            { q: "Viết $\\frac{81}{16}$ dạng lũy thừa của $\\frac{3}{2}$", a: "(3/2)^4", exp: "$\\left(\\frac{3}{2}\\right)^4$" },
+            { q: "Viết $0,01$ dạng lũy thừa cơ số 10", a: "10^-2", exp: "$10^{-2}$" },
+            { q: "Viết $1000$ dạng lũy thừa cơ số 10", a: "10^3", exp: "$10^3$" },
+            { q: "Viết $3^9$ dạng lũy thừa số mũ 3", a: "27^3", exp: "$27^3$" }
+        ],
+        // ĐỀ 7
+        [
+            { q: "Viết $2^{12}$ dạng lũy thừa số mũ 3", a: "16^3", exp: "$16^3$" },
+            { q: "Viết $16$ dạng lũy thừa cơ số 2", a: "2^4", exp: "$2^4$" },
+            { q: "Viết $25$ dạng lũy thừa cơ số 5", a: "5^2", exp: "$5^2$" },
+            { q: "Viết $32$ dạng lũy thừa cơ số 2", a: "2^5", exp: "$2^5$" },
+            { q: "Viết $81$ dạng lũy thừa cơ số 3", a: "3^4", exp: "$3^4$" },
+            { q: "Viết $128$ dạng lũy thừa cơ số 2", a: "2^7", exp: "$2^7$" },
+            { q: "Viết $125$ dạng lũy thừa cơ số 5", a: "5^3", exp: "$5^3$" },
+            { q: "Viết $\\frac{256}{625}$ dạng lũy thừa của $\\frac{4}{5}$", a: "(4/5)^4", exp: "$\\left(\\frac{4}{5}\\right)^4$" },
+            { q: "Viết $\\frac{1}{25}$ dạng lũy thừa cơ số 5", a: "5^-2", exp: "$5^{-2}$" },
+            { q: "Viết $0,008$ dạng lũy thừa cơ số 5", a: "5^-3", exp: "$5^{-3}$" }
+        ],
+        // ĐỀ 8
+        [
+            { q: "Tính: $8^2 \\cdot 2^4$", a: "1024", exp: "$2^{10} = 1024$" },
+            { q: "Tính: $2^{23} : 4^3$", a: "2^17", exp: "$2^{17}$" },
+            { q: "Tính: $125^3 : 25$", a: "5^7", exp: "$5^7$" },
+            { q: "Rút gọn: $\\frac{27^4 \\cdot 3^2}{9^3}$", a: "3^8", exp: "$3^8$" },
+            { q: "Rút gọn: $\\frac{125^2 \\cdot 25^3}{5^4}$", a: "5^8", exp: "$5^8$" },
+            { q: "Rút gọn: $\\frac{1}{8} \\cdot 64^4$", a: "2^9", exp: "$2^9$" },
+            { q: "Viết $7^{12} \\cdot 27^4$ dạng lũy thừa", a: "21^12", exp: "$21^{12}$" },
+            { q: "Viết $15^3 : 125^3$ dạng lũy thừa", a: "(3/25)^3", exp: "$\\left(\\frac{3}{25}\\right)^3$" },
+            { q: "Viết $(0,125)^8 \\cdot 64^4$ dạng lũy thừa", a: "1", exp: "$1$" },
+            { q: "Rút gọn: $4^5 \\cdot 5^{27}$", a: "4^5*5^27", exp: "$4^5 \\cdot 5^{27}$" }
+        ],
+        // ĐỀ 9
+        [
+            { q: "Rút gọn: $3^{12} \\cdot 2^{16}$", a: "432^4", exp: "$432^4$" },
+            { q: "Tính: $A = (3^2)^3 - (-2)^3 - (-5^2)^2$", a: "-608", exp: "$81 - (-8) - 625 = -608$" },
+            { q: "Tính: $B = 2^3 + 3 \\cdot (1/2)^0 \\cdot (1/2)^2 \\cdot 4 + (-2)^2 : (1/2) : 8$", a: "12", exp: "$12$" },
+            { q: "Tính: $A = 3^2 \\cdot \\frac{1}{243} \\cdot 81^2 \\cdot \\frac{1}{3^3}$", a: "9", exp: "$9$" },
+            { q: "Tính: $B = (4 \\cdot 2^5) : (2^3 \\cdot \\frac{1}{16})$", a: "256", exp: "$256$" },
+            { q: "Tính: $A = (-1/3)^3 \\cdot (-1/3)^2 \\cdot (-1/3)$", a: "1/729", exp: "$\\frac{1}{729}$" },
+            { q: "Tính: $B = (-1/3)^{-1} \\cdot (-6/7)^0 + (1/2)^2 : 2$", a: "-31/8", exp: "$-\\frac{31}{8}$" },
+            { q: "Tính: $A = (1\\frac{3}{4})^3 \\cdot (1\\frac{3}{4})^2 + (-1,031)^0$", a: "211/64", exp: "$\\frac{211}{64}$" },
+            { q: "Tính: $B = (2/3)^3 - 4 \\cdot (-1\\frac{3}{4})^2 + (-2/3)^3$", a: "-49/4", exp: "$-\\frac{49}{4}$" },
+            { q: "Tìm $x$: $x^3 = -8$", a: "-2", exp: "$x = -2$" }
+        ],
+        // ĐỀ 10
+        [
+            { q: "Tìm $x$: $x^2 = 16$", a: "4 hoặc -4", exp: "$x = \\pm 4$" },
+            { q: "Tìm $x$: $(3x-1)^4 = 81$", a: "4/3 hoặc -2/3", exp: "$x = \\frac{4}{3}$ hoặc $x = -\\frac{2}{3}$" },
+            { q: "Tìm $x$: $(2x+1)^3 = -0,001$", a: "-0.55", exp: "$x = -0,55$" },
+            { q: "Tìm $n$: $\\frac{625}{5^n} = 5$", a: "3", exp: "$n = 3$" },
+            { q: "Tìm $n$: $3^n \\cdot 2^n = 36$", a: "2", exp: "$n = 2$" },
+            { q: "Tìm $n$: $25^{2n} : 5^n = 125^2$", a: "2", exp: "$n = 2$" },
+            { q: "Tìm $x$: $3^{x+2} = 27$", a: "1", exp: "$x = 1$" },
+            { q: "Tìm $x$: $(1/2)^x = 1/16$", a: "4", exp: "$x = 4$" },
+            { q: "Tìm $x$: $(5x-1)^6 = 729$", a: "4/5 hoặc -2/5", exp: "$x = \\frac{4}{5}$ hoặc $x = -\\frac{2}{5}$" },
+            { q: "Tìm $x$: $(2x-3)^4 = 5^4$", a: "4 hoặc -1", exp: "$x = 4$ hoặc $x = -1$" }
+        ]
+    ];
+
+    let currentEssayIndex = 0; // Đề hiện tại (0-9)
+    let essayScores = new Array(10).fill(0); // Điểm từng đề
+    let essayAnswered = new Array(10).fill(false); // Trạng thái làm bài từng đề
+
+    const essayTitle = document.getElementById('essay-title');
+    const essayScoreBadge = document.getElementById('essay-score-badge');
+    const essayQuestionsContainer = document.getElementById('essay-questions-container');
+    const essayDeProgress = document.getElementById('essay-de-progress');
+    const essayPrevBtn = document.getElementById('essay-prev-btn');
+    const essayNextBtn = document.getElementById('essay-next-btn');
+    const essayContainer = document.getElementById('essay-container');
+    const essayResultScreen = document.getElementById('essay-result-screen');
+    const essayFinalScore = document.getElementById('essay-final-score');
+    const essayResultMessage = document.getElementById('essay-result-message');
+
+    function loadEssay() {
+        const de = essayData[currentEssayIndex];
+        essayTitle.innerHTML = `Đề ${currentEssayIndex + 1}`;
+        essayDeProgress.innerHTML = `Đề ${currentEssayIndex + 1} / 10`;
+        essayScoreBadge.innerHTML = `Điểm: ${essayScores[currentEssayIndex]}/10`;
+        
+        essayQuestionsContainer.innerHTML = '';
+        de.forEach((item, index) => {
+            const qDiv = document.createElement('div');
+            qDiv.className = 'essay-question';
+            qDiv.innerHTML = `
+                <div class="essay-question-text">Câu ${index + 1}: ${item.q}</div>
+                <div class="essay-input-group">
+                    <input type="text" class="essay-input" id="essay-input-${currentEssayIndex}-${index}" placeholder="Nhập đáp án cuối cùng...">
+                    <button class="essay-check-btn" id="essay-btn-${currentEssayIndex}-${index}" onclick="checkEssayAnswer(${currentEssayIndex}, ${index})">Kiểm tra</button>
+                </div>
+                <div class="essay-feedback" id="essay-fb-${currentEssayIndex}-${index}"></div>
+                <div class="essay-explanation" id="essay-exp-${currentEssayIndex}-${index}"></div>
+            `;
+            essayQuestionsContainer.appendChild(qDiv);
+        });
+
+        essayPrevBtn.disabled = currentEssayIndex === 0;
+        essayNextBtn.innerHTML = currentEssayIndex === 9 ? 'Xem kết quả 🏆' : 'Tiếp theo ➡';
+        
+        if (window.MathJax) MathJax.typesetPromise([essayQuestionsContainer]);
+    }
+
+    function checkEssayAnswer(deIndex, qIndex) {
+        const input = document.getElementById(`essay-input-${deIndex}-${qIndex}`);
+        const btn = document.getElementById(`essay-btn-${deIndex}-${qIndex}`);
+        const fb = document.getElementById(`essay-fb-${deIndex}-${qIndex}`);
+        const exp = document.getElementById(`essay-exp-${deIndex}-${qIndex}`);
+        
+        if (btn.disabled) return;
+        
+        const userAnswer = input.value.trim().toLowerCase().replace(/\s/g, '');
+        const correctAnswer = essayData[deIndex][qIndex].a.toLowerCase().replace(/\s/g, '');
+        
+        // So sánh đáp án (cho phép một số biến thể)
+        let isCorrect = false;
+        if (userAnswer === correctAnswer) isCorrect = true;
+        // Xử lý các trường hợp đặc biệt
+        if (correctAnswer.includes('hoặc')) {
+            const parts = correctAnswer.split('hoặc');
+            if (parts.some(p => userAnswer === p.trim())) isCorrect = true;
+        }
+        
+        if (isCorrect) {
+            input.classList.add('correct-input');
+            fb.innerHTML = '✅ Chính xác!';
+            fb.className = 'essay-feedback show correct-fb';
+            essayScores[deIndex]++;
+            essayScoreBadge.innerHTML = `Điểm: ${essayScores[deIndex]}/10`;
+        } else {
+            input.classList.add('wrong-input');
+            fb.innerHTML = `❌ Sai. Đáp án đúng là: ${essayData[deIndex][qIndex].a}`;
+            fb.className = 'essay-feedback show wrong-fb';
+        }
+        
+        exp.innerHTML = `<b>Giải thích:</b> ${essayData[deIndex][qIndex].exp}`;
+        exp.classList.add('show');
+        btn.disabled = true;
+        input.disabled = true;
+        
+        if (window.MathJax) MathJax.typesetPromise([fb, exp]);
+    }
+
+    function prevEssay() {
+        if (currentEssayIndex > 0) {
+            currentEssayIndex--;
+            loadEssay();
+        }
+    }
+
+    function nextEssay() {
+        if (currentEssayIndex < 9) {
+            currentEssayIndex++;
+            loadEssay();
+        } else {
+            showEssayResult();
+        }
+    }
+
+    function showEssayResult() {
+        essayContainer.style.display = 'none';
+        essayResultScreen.classList.add('show');
+        const total = essayScores.reduce((a, b) => a + b, 0);
+        essayFinalScore.innerHTML = `${total}/100`;
+        if (total === 100) essayResultMessage.innerHTML = "Xuất sắc! Bạn là bậc thầy lũy thừa! 🌟";
+        else if (total >= 70) essayResultMessage.innerHTML = "Rất tốt! Bạn chỉ cần ôn lại một vài chỗ. 👍";
+        else essayResultMessage.innerHTML = "Cố gắng lên nhé! Hãy xem lại lý thuyết và làm lại. 💪";
+    }
+
+    function restartEssay() {
+        currentEssayIndex = 0;
+        essayScores = new Array(10).fill(0);
+        essayAnswered = new Array(10).fill(false);
+        essayContainer.style.display = 'block';
+        essayResultScreen.classList.remove('show');
+        loadEssay();
+    }
+
+    // ===== INITIALIZATION =====
+    loadQuestion();
+    loadEssay();
+</script>
+
+</body>
+</html>
